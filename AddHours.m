@@ -25,3 +25,6 @@ if isempty(dt)
     error('형식이 올바르지 않습니다.');
 end
 asda
+
+% --- 2) 더할 시간(시간 단위) 입력 ---
+deltaHours = input('더할 시간(시간 단위, 예: 50): ');
