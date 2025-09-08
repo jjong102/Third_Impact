@@ -24,7 +24,12 @@ end
 if isempty(dt)
     error('형식이 올바르지 않습니다.');
 end
-asda
 
 % --- 2) 더할 시간(시간 단위) 입력 ---
 deltaHours = input('더할 시간(시간 단위, 예: 50): ');
+
+% --- 3) 계산 & 출력 ---
+result = dt + hours(deltaHours);
+
+result.Format = 'yyyy년 MM월 dd일 HH시';
+fprintf('결과: %s\n', char(result));
