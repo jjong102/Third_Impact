@@ -2,11 +2,11 @@
 
 ## 1. 기본 정보
 - 팀명: Third_Impact
-- 소속(학교/연구실): 인천대학교
+- 소속: 인천대학교 임베디드시스템공학과
 - 팀원: 
-    이원종, 3학년/학부, leewon102@inu.ac.kr
-    이석빈, 4학년/학부, lsbin11@inu.ac.kr
-    박소윤, 4학년/학부, asz1218@inu.ac.kr
+    - 이원종, 3학년/학부, leewon102@inu.ac.kr
+    - 이석빈, 4학년/학부, lsbin11@inu.ac.kr
+    - 박소윤, 4학년/학부, asz1218@inu.ac.kr
 
 ---
 
