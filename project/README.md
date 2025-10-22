@@ -2,10 +2,11 @@
 
 
 > **MATLAB Simulink + RoadRunner Scenario 기반 차선 유지(Lane Following) 자율주행 시뮬레이션**
-> <p align="center">
-  <img src="https://github.com/user-attachments/assets/dcad00bd-f2a0-4702-897c-ebb5c6f04b80" width="48%" />
-  <img src="https://github.com/user-attachments/assets/06693cc4-fa1c-446a-a114-7859dcd872b0" width="48%" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2b582a80-294d-4517-8e4c-9a6b324425bc" width="48%" />
+  <img src="https://github.com/user-attachments/assets/06e96ea3-3282-4feb-9d07-b657551d5601" width="48%" />
 </p>
+
 
 ---
 
