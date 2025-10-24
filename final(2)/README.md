@@ -186,7 +186,7 @@ set(rrSim, 'SimulationCommand','Start');
 |------------|------|
 | **Simulation 3D Scene Configuration** | RoadRunner와 Simulink의 3D 환경을 동기화하여 시각적 시뮬레이션 제공 |
 | **HelperConvert DSPoseToSim3D** | RoadRunner에서 전달받은 차량(Actors)의 Pose 데이터를 Simulink 3D 좌표계로 변환 |
-| **Simulation 3D Vehicle Blocks (총 6대)** | Ego 차량 1대 + 주변 차량 5대의 주행 모델 구성 |
+| **Simulation 3D Vehicle Blocks (총 5대)** | Ego 차량 1대 + 주변 차량 4대의 주행 모델 구성 |
 | **InitialPos / InitialRot 설정** | 각 차량의 초기 위치 및 회전값을 정의하여 도로 위 배치 |
 | **poseOfEgoVehicle 출력** | Ego 차량의 위치 및 자세 정보를 Vehicle Dynamics 블록으로 전달 |
 
@@ -238,9 +238,99 @@ set(rrSim, 'SimulationCommand','Start');
 | **출력** | Ego Pose 데이터 (ActorID, Position, Velocity, Yaw 포함)를 RoadRunner Ego Pose Writer로 전송 |
 
 ---
+## 3) 핵심 알고리즘 — laneChange() (차선 변경 판단 로직)
+
+본선 2차의 핵심은 전방 차량 인식과 자동 차선 변경을 통합한 자율주행 판단 함수 `laneChange()`입니다.  
+이 함수는 실시간으로 Ego 차량과 주변 차량(Extra2~5)의 위치를 비교하여,  
+**안전거리를 기준으로 차선을 자동으로 전환하거나 유지**하는 역할을 수행합니다.
+
+### 1️. 함수 개요
+
+| 항목 | 내용 |
+|:--|:--|
+| **함수명** | `laneChange(u)` |
+| **위치** | Simulink 모델 `Third_Impact_final2.slx` 내 *Interpreted MATLAB Function* 블록 |
+| **역할** | Ego 차량과 주변 차량 간의 거리 및 차선 위치를 비교하여 차선 변경 여부 판단 |
+| **출력** | `changedLane` (현재 주행 차선, `1` 또는 `2`) |
+
+---
+
+### 2️. 설계 의도 및 목표
+
+| 목표 | 설명 |
+|:--|:--|
+| **자율적 차선 판단** | 주변 차량의 위치를 분석해 전방 차량이 가까울 때 차선 변경을 수행 |
+| **불필요한 차선 진동 억제** | 일정 주기(`count < 2/Ts`) 동안 판단을 보류하여 안정적 동작 유지 |
+| **경량화된 실시간 처리** | 거리 계산만으로 판단하여 연산 부담 최소화 (하드웨어 실시간성 보장) |
+
+---
+
+### 3️. 주요 변수 정의
+
+| 변수 | 설명 |
+|:--|:--|
+| `poseOfEgo` | Ego 차량의 `[x, y, yaw, v]` Pose |
+| `poseOfExtra{2~5}` | 주변 차량들의 `[x, y, yaw, v]` Pose |
+| `x_ref`, `y_ref` | 1차선 중심 궤적 |
+| `x_ref2`, `y_ref2` | 2차선 중심 궤적 |
+| `presentLane` | 현재 주행 중인 차선 (`1` 또는 `2`) |
+| `safeDist` | 차선 변경을 유도하는 최소 안전거리 (`20m`) |
+| `count`, `Ts` | 판단 주기 관리 변수 (`2초`마다 갱신) |
+
+---
+
+### 4️. 동작 과정 요약
+
+| 단계 | 설명 |
+|:--|:--|
+| **1단계** | Ego 및 주변 차량의 Pose 데이터를 입력(`u`)으로 받아 분리 |
+| **2단계** | 각 차량이 어느 차선(`x_ref` 또는 `x_ref2`)에 가까운지 계산 |
+| **3단계** | Ego 차량과 각 차량의 거리(`distFromEgo`) 계산 |
+| **4단계** | 같은 차선 + `safeDist` 이내 접근 시 → 차선 변경 수행 |
+| **5단계** | `2초(count < 2/Ts)` 대기 후 다음 판단 수행 (진동 방지) |
+
+### 5. 핵심 설계 포인트
+
+| 구분 | 설명 |
+|:--|:--|
+| **거리 기반 판단** | 차량 간 거리(`distFromEgo`)와 차선 위치(`lane{i}`)만으로 단순·명확하게 판단 |
+| **안전 거리 제어** | `safeDist = 20m` 이하일 경우 차선 변경을 즉시 수행 |
+| **판단 주기 제어** | `count`와 `Ts`를 통해 2초 단위로 판단 → 진동(oscillation) 방지 |
+| **경량화된 연산** | 최소 제곱 거리 비교(`min`), 거리 계산(`sqrt`)만 사용해 실시간 동작 보장 |
+| **순환 차선 전환 로직** | `presentLane = 3 - presentLane` → 1↔2 전환 단일 수식으로 구현 |
+
+---
+
+### 6. 결과 요약
+
+| 항목 | 결과 |
+|:--|:--|
+| **차선 변경 판단 성공률** | 100% (5회 중 5회 정상 판단) |
+| **복귀 안정성** | 1회 Overshoot 발생 (steering 응답 지연) |
+| **판단 주기** | 약 2초 단위 (`Ts = 0.01` 기준) |
+| **Safe Distance** | 20m 설정 시 가장 안정적인 결과 확인 |
+
+---
+
+### 7.  결론
+
+본선 2차의 **`laneChange()` 함수**는  
+**Pure Pursuit 기반의 횡방향 제어**와 **Adaptive Speed 기반의 종방향 제어**를 통합 제어하는 핵심 로직입니다.  
+전방 차량 감지와 차선 변경 판단을 실시간으로 수행하며,
+
+> ✅ **거리 기반 규칙형 로직의 단순성**  
+> ✅ **판단 주기 제어에 의한 안정성**  
+> ✅ **시나리오 독립적인 확장성**
+
+덕분에 실제 도로 환경에서도 효율적이고 예측 가능한 **Lane Change Behavior**를 구현할 수 있었습니다.
+
+💡 본 알고리즘은 **Interpreted MATLAB Function 블록** 내부에서 실행되어  
+**RoadRunner Behavior 모델 내 실시간 판단을 담당하는 핵심 모듈**로 활용되었습니다.
 
 
-## 3) 실행 방법
+---
+
+## 4) 실행 방법
 
 1. `Third_Impact_final2.mlx` 파일에서 **프로젝트 경로(`rrProjectPath`)**를 환경에 맞게 수정  
 2. `Third_Impact_final2.slx`를 RoadRunner의 **Behavior 설정**에 등록  
@@ -248,7 +338,7 @@ set(rrSim, 'SimulationCommand','Start');
 
 ---
 
-## 4) 실험 결과 및 분석
+## 5) 실험 결과 및 분석
 
 | 항목 | 측정 결과 |
 |------|------------|

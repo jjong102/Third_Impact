@@ -72,7 +72,7 @@ https://github.com/user-attachments/assets/e5bf20b4-b53e-46cf-94a6-a1721da3aa57
 - **RoadRunner 시뮬레이션 환경:**  
   - 맵: `competition.rrscene`  
   - 시나리오: 직선 및 완만한 곡선 구간 포함  
-  - Ego 차량 1대, 주변 Actor 차량 5대 배치 (정적/동적 혼합)  
+  - Ego 차량 1대, 주변 Actor 차량 4대 배치 (정적/동적 혼합)  
   - 각 차량은 색상 및 위치가 다르게 초기화되어 시각적 식별 가능  
 
 - **차량 모델 및 센서 구성:**  

@@ -175,7 +175,7 @@ set(rrSim, 'SimulationCommand','Start');
 |------------|------|
 | **Simulation 3D Scene Configuration** | RoadRunner 환경과 시각적 3D 동기화 |
 | **HelperConvert DSPoseToSim3D** | 각 차량(Actor)의 좌표 변환 |
-| **Simulation 3D Vehicle Blocks (총 6대)** | Ego + 주변 차량 모델링 |
+| **Simulation 3D Vehicle Blocks (총 4대)** | Ego + 주변 차량 모델링 |
 | **poseOfEgoVehicle 출력** | Ego 위치를 Vehicle Dynamics로 전달 |
 
 
