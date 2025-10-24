@@ -129,77 +129,94 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ## 2) Simulink Behavior (`Third_Impact_final1.slx`) — 블록 구조 & 신호 연결
-![alt text](image.png)
+![alt text](./images/main.png)
 
-### 2.1 블록 인벤토리 (Top Level)
-아래 표는 **Top-Level** 모델의 주요 블록 목록입니다.
+### 2.1 블록 인벤토리
 
-| SID | Block Name | BlockType | MaskType |
-| --- | --- | --- | --- |
-| 4947 | Actor Pose Reader | Reference |  |
-| 5095 | Demux | Demux |  |
-| 4244 | Digital Clock | DigitalClock |  |
-| 4946 | Ego Pose Reader | Reference |  |
-| 4949 | Ego Pose Writer | Reference |  |
-| 4437 | Goto1 | Goto |  |
-| 5075 | Interpreted MATLAB
-Function | MATLABFcn |  |
-| 5076 | Interpreted MATLAB
-Function1 | MATLABFcn |  |
-| 5118 | Interpreted MATLAB
-Function2 | MATLABFcn |  |
-| 5077 | Mux | Mux |  |
-| 4416 | Pack Actor Poses | MATLABSystem |  |
-| 4321 | Pack Ego Pose | SubSystem |  |
-| 4268 | Queue | Queue |  |
-| 4271 | Receive | Receive |  |
-| 4948 | RoadRunner Scenario | Reference |  |
-| 4274 | Send | Send |  |
-| 4896 | Sensors and Vehicles | SubSystem |  |
-| 5114 | Subsystem | SubSystem |  |
-| 4304 | Terminator2 | Terminator |  |
-| 5096 | To Workspace | ToWorkspace |  |
-| 5098 | Vehicle Dynamics | SubSystem |  |
+| SID | Block Name | BlockType | MaskType | 역할 |
+|------|-------------|------------|-----------|------|
+| 4948 | RoadRunner Scenario | Reference |  | RoadRunner 시나리오 인터페이스 |
+| 4946 | Ego Pose Reader | Reference |  | RR에서 Ego 차량 Pose 수신 |
+| 4271 | Receive | Receive |  | RR → Simulink 데이터 입력 |
+| 4896 | Sensors and Vehicles | SubSystem |  | Ego 및 타 차량 데이터 처리 |
+| 4416 | Pack Actor Poses | MATLABSystem |  | 타 차량 위치정보 패킹 |
+| 5098 | Vehicle Dynamics | SubSystem |  | 차량 동역학 모델 |
+| 5114 | Speed Subsystem | SubSystem |  | 가속/감속 제어 |
+| 5143 | Steering Subsystem | SubSystem |  | 조향 제어 |
+| 4321 | Pack Ego Pose | SubSystem |  | Ego Pose를 Bus 형태로 변환 |
+| 4949 | Ego Pose Writer | Reference |  | RR에 Ego Pose 송신 |
 
->블록 설명
-> - **Ego Pose Reader/Writer, Actor Pose Reader**: RoadRunner와의 포즈 입/출력 인터페이스 블록
-> - **Vehicle Dynamics**: 차량 동역학 계산(속도/가속/조향 반영)
-> - **Interpreted MATLAB Function(×3)**: 사용자 정의 로직(예: 경로 추종, dead-reckoning, 신호 전처리) 삽입
-> - **Pack Ego/Actor Poses, Queue, Send/Receive**: RR-Behavior 신호 패킹/큐잉/송수신
-> - **Sensors and Vehicles**: RoadRunner 시뮬레이션 장면과 Simulink 사이의 센서/액터 신호 집약 지점
-> - **To Workspace**: 후처리/검증용 로깅
+---
 
-### 2.2 신호 연결(From→To)
-Top-Level에서 확인된 주요 라인 연결은 다음과 같습니다.
+### 2.2 신호 흐름 요약 (From → To)
 
-| From (block:port) | To (block:port) |
-| --- | --- |
-| Ego Pose Reader:1 | Receive:1 |
-| Digital Clock:1 |  |
-| Send:1 | Ego Pose Writer:1 |
-| Vehicle Dynamics:3 | Terminator2:1 |
-| Vehicle Dynamics:1 | Pack Ego Pose:1 |
-| Receive:1 | Sensors and Vehicles:1 |
-| Actor Pose Reader:1 | Queue:1 |
-| Pack Ego Pose:1 | Send:1 |
-| Queue:1 | Pack Actor Poses:2 |
-| Pack Actor Poses:1 | Sensors and Vehicles:2 |
-| Sensors and Vehicles:1 |  |
-| Interpreted MATLAB
-Function:1 | Mux:2 |
-| Mux:1 | Interpreted MATLAB
-Function1:1 |
-| Vehicle Dynamics:2 |  |
-| Demux:1 | Interpreted MATLAB
-Function:1 |
-| Subsystem:1 | Vehicle Dynamics:2 |
-| Interpreted MATLAB
-Function1:1 |  |
+| From (block:port) | To (block:port) | 설명 |
+|--------------------|------------------|------|
+| **RoadRunner Scenario** | 전체 시뮬레이션 환경 | RR과 Simulink 연결 |
+| **Ego Pose Reader:1** | **Receive:1** | RR로부터 Ego Pose 수신 |
+| **Receive:1** | **Sensors and Vehicles:1 (Ego)** | Ego 차량 상태 전달 |
+| **Actor Pose Reader** | **Pack Actor Poses** | 타 차량 Pose 정보 수신 및 패킹 |
+| **Pack Actor Poses** | **Sensors and Vehicles:Target** | 타 차량들의 위치정보 전달 |
+| **Sensors and Vehicles** | **pos_egovehicle** | Ego 차량 좌표 출력 |
+| **pos_egovehicle** | **Vehicle Dynamics 입력부** | 실제 차량 거동 계산을 위한 Pose 입력 |
+| **Vehicle Dynamics** | **Pack Ego Pose** | Pose + 속도 + yaw 정보 패킹 |
+| **Pack Ego Pose** | **Send → Ego Pose Writer** | RoadRunner로 Ego Pose 송신 |
 
-> 해석
-> - `Ego Pose Reader:1 → Receive:1` : RR의 에고 차량 포즈를 Behavior 쪽 Receive 입력으로 공급
-> - `Pack Ego Pose:1 → Send:1 → Ego Pose Writer:1` : Behavior에서 생성한 에고 포즈/명령을 패킹→송신→RR에 기록
-> - `Vehicle Dynamics` 블록 출력 일부가 Terminator로 연결: 미사용 디버그/보조 출력 차단
+---
+
+## 3️. 주요 서브시스템 구조
+
+---
+
+### Sensors and Vehicles
+![alt text](./images/Sensorsandvehicles.png)
+
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **Simulation 3D Scene Configuration** | RoadRunner 환경과 시각적 3D 동기화 |
+| **HelperConvert DSPoseToSim3D** | 각 차량(Actor)의 좌표 변환 |
+| **Simulation 3D Vehicle Blocks (총 6대)** | Ego + 주변 차량 모델링 |
+| **poseOfEgoVehicle 출력** | Ego 위치를 Vehicle Dynamics로 전달 |
+
+
+---
+
+### Speed Subsystem
+
+| 구성 요소 | 역할 |
+|------------|------|
+| `Delta` 입력 | 목표 속도 오차 계산 (선행차와의 거리 기반) |
+| `-K` Gain | 감속/가속 비율 조정 |
+| **Sigmoid Function** | 가속 변화율을 부드럽게 제한 (jerk 감소) |
+| `ego_velocity` Feedback | 실제 속도 피드백 제어 |
+| `velocity_cmd` 출력 | Vehicle Dynamics로 속도 명령 전달 |
+
+
+
+---
+
+### Vehicle Dynamics (Bicycle Model with Force Input)
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **입력** | Steering Angle (rad), Acceleration (m/s²) |
+| **Simple Driveline & Brakes** | 구동력 및 제동력 계산 |
+| **SAE J670 모델** | 차량의 실제 Longitudinal/Lateral 동역학 계산 |
+| **출력** | Pose, Yaw, Velocity, Yaw Rate 등 |
+| **Pack Ego Actor** | Bus 형태로 Pose/Velocity/Yaw Rate 전달 |
+
+
+
+---
+
+### Pack Ego Pose
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **입력** | Vehicle Pose (x, y, yaw 등) |
+| **BusVehiclePose → BusActorPose 변환** | Simulink Bus 구조로 매핑 |
+| **출력** | Ego Pose (1x1 ActorID, 1x3 Position, 1x3 Velocity 등) |
 
 
 ---
@@ -235,11 +252,17 @@ Function1:1 |  |
 
 ---
 
-## 결과 및 개선점
+## 시뮬레이션 결과 요약
 
-- **결과:** 커브 구간 차선 이탈 없이 안정적인 자율주행 구현 성공  
-- **개선점:**  
-  - 장애물 인식 및 추월 로직 추가 예정
+| 항목 | 결과 |
+|------|------|
+| **기능 구현** | RoadRunner–Simulink 연동 성공, Ego 차량 주행 |
+| **차선 유지 안정성** | ±0.3m 이내로 유지 |
+| **시뮬레이션 FPS** | 평균 약 50 FPS |
+| **전방 차량 인식** | Actor Pose Reader 기반 정상 작동 |
+
+> *본선 1차에서는 기본 주행 및 차선 유지 안정화를 중점적으로 검증하였으며,  
+> 본선 2차에서는 여기에 차선 변경 및 복귀 로직을 통합하였습니다.*
 
 
 ---
