@@ -25,8 +25,16 @@
   본 프로젝트는 이러한 목적을 위해, Pure Pursuit 기반 제어 구조를 확장하여 전방 차량 감지와 차선 변경을 결합한 시뮬레이션 시스템을 개발하였다.
 
 ---
-## 3. 실행 영상
+## 3. 실행 영상 및 본선 단계별 상세 내용 안내 
 https://github.com/user-attachments/assets/e5bf20b4-b53e-46cf-94a6-a1721da3aa57
+
+본 프로젝트는 **본선 1차**와 **본선 2차** 두 단계로 나누어 개발 및 검증을 진행하였습니다.  
+각 단계의 세부 구현 내용, Simulink 구조, 코드 설명은 아래 링크에서 확인할 수 있습니다.
+
+| 단계 | 내용 | 링크 |
+|------|------|------|
+| **본선 1차** | 기본 차선 유지 및 Ego 차량 안정 주행 구현 (RoadRunner–Simulink 연동 기반) | [👉 본선 1차 기술 설명 보기](https://github.com/jjong102/Third_Impact/tree/main/final(1)) |
+| **본선 2차** | 전방 차량 인식 + 차선 변경 + 복귀 통합 자율주행 시스템 | [👉 본선 2차 기술 설명 보기](https://github.com/jjong102/Third_Impact/tree/main/final(2)) |
 
 
 ## 4. 시스템 구조 및 설계  
