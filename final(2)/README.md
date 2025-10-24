@@ -12,7 +12,7 @@ https://github.com/user-attachments/assets/e5bf20b4-b53e-46cf-94a6-a1721da3aa57
 |------|------|
 | **시뮬레이션 환경** | RoadRunner `competition.rrscene` (2차선 도로) |
 | **핵심 기능** | 차선 유지, 전방 차량 인식, 차선 변경 및 복귀 |
-| **제어 알고리즘** | Pure Pursuit + PID Steering / Adaptive Speed 제어 |
+| **제어 알고리즘** | Pure Pursuit / Adaptive Speed 제어 |
 | **추가 변수** | Adaptive Lookahead(`Ld`), 현재 차선 상태(`presentLane`) |
 | **테스트 결과** | 전방 인식 및 차선 변경 성공, 복귀 구간에서 Steering Overshoot 관찰 |
 
@@ -138,7 +138,7 @@ set(rrSim, 'SimulationCommand','Start');
     - RoadRunner 시뮬레이션 시작.
 ---
 
-## 2️⃣ Simulink Behavior (`Third_Impact_final2.slx`) — Top-Level 구조
+## 2️) Simulink Behavior (`Third_Impact_final2.slx`) — Top-Level 구조
 ![alt text](images/main.png)
 ---
 
@@ -175,45 +175,72 @@ set(rrSim, 'SimulationCommand','Start');
 
 ---
 
-## 3️⃣ 주요 서브시스템
+## 3. 주요 서브시스템 구조
+## 3️⃣ 주요 서브시스템 구조
+
+---
+
 ### Sensors and Vehicles Subsystem
-- **구성 목적:** RoadRunner와 Simulink 간의 **Ego 및 주변 차량(Actors)** 위치, 자세(Pose)를 실시간 동기화  
-- **핵심 역할:** Ego 차량과 5대의 주변 차량을 3D 시뮬레이션 공간에 배치하고, 각 차량의 좌표를 변환하여 시각화  
-- **모델 개요:**
-  - `Simulation 3D Scene Configuration` : 3D 환경 설정 및 Scene 로딩  
-  - `HelperConvert DSPoseToSim3D` : RoadRunner 좌표계를 Simulink 3D 모델 좌표계로 변환  
-  - `Simulation 3D Vehicle with Ground Following (1~6)` : Ego 및 주변 차량(총 6대)의 주행 모델  
-  - 각 차량별 색상, 초기 위치, 회전 정보(`InitialPos`, `InitialRot`) 설정  
-  - `poseOfEgoVehicle` : Ego 차량의 위치를 Vehicle Dynamics 블록으로 전달
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **Simulation 3D Scene Configuration** | RoadRunner와 Simulink의 3D 환경을 동기화하여 시각적 시뮬레이션 제공 |
+| **HelperConvert DSPoseToSim3D** | RoadRunner에서 전달받은 차량(Actors)의 Pose 데이터를 Simulink 3D 좌표계로 변환 |
+| **Simulation 3D Vehicle Blocks (총 6대)** | Ego 차량 1대 + 주변 차량 5대의 주행 모델 구성 |
+| **InitialPos / InitialRot 설정** | 각 차량의 초기 위치 및 회전값을 정의하여 도로 위 배치 |
+| **poseOfEgoVehicle 출력** | Ego 차량의 위치 및 자세 정보를 Vehicle Dynamics 블록으로 전달 |
+
+---
 
 ### Steering Subsystem
-- **제어 방식:** Pure Pursuit + PID 혼합 제어  
-- **특징:** Adaptive Lookahead(`Ld`)로 곡선 구간 안정성 확보  
-- **추가 기능:** 차선 변경 중 yaw rate 과도 억제  
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **Pure Pursuit 제어 로직** | 참조 궤적(`x_ref`, `y_ref`)을 기반으로 Lateral Error를 최소화하는 조향각 계산 |
+| **Adaptive Lookahead (Ld)** | 차량 속도 및 곡률에 따라 동적으로 Lookahead 거리 조정 |
+| **Yaw Rate 제한부** | 급격한 조향 시 발생하는 과도 yaw rate를 감쇠하여 안정성 확보 |
+| **steer_cmd 출력** | 계산된 조향각 명령을 Vehicle Dynamics에 전달 |
+
+---
 
 ---
 
 ### Speed Subsystem
-- 전방 차량과의 거리(`front_vehicle_dist`)를 기반으로 속도 제어  
-- Sigmoid 기반 가감속 적용 → **jerk 최소화 및 부드러운 추월 동작**  
+
+| 구성 요소 | 역할 |
+|------------|------|
+| **Steering Angle 입력 (`steer_cmd`)** | 조향 각도에 따라 차량의 목표 속도를 동적으로 조정 |
+| **Gain (-K)** | 곡률이 큰 구간(조향각 ↑)에서 감속 비율을 높여 주행 안정성 확보 |
+| **Sigmoid Function** | 속도 변화율을 부드럽게 제한하여 jerk(가속도 변화) 최소화 |
+| **ego_velocity Feedback** | Vehicle Dynamics로부터 현재 속도를 받아 피드백 제어 수행 |
+| **velocity_cmd 출력** | 조향각 기반의 목표 속도 명령을 Vehicle Dynamics로 전달 (커브 시 감속, 직선 구간 시 가속) |
 
 ---
 
-### Vehicle Dynamics
-- SAE J670 표준 **Bicycle Model** 기반  
-- 입력: Steering Angle, Acceleration  
-- 출력: Longitudinal / Lateral Velocity, Yaw Rate  
-- 실제 차량과 유사한 동역학 반응 구현  
+### Vehicle Dynamics (Bicycle Model with Force Input)
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **입력** | Steering Angle (rad), Acceleration (m/s²) |
+| **Simple Driveline & Brakes** | 차량의 구동력 및 제동력을 계산하여 동역학 반영 |
+| **SAE J670 표준 Bicycle Model** | Longitudinal / Lateral Motion 및 Yaw Rate 계산 |
+| **출력** | Pose, Yaw, Velocity, Yaw Rate, Slip Angle 등 물리적 차량 상태 |
+| **Pack Ego Actor** | 계산된 Pose/Velocity/Yaw Rate를 Bus 신호로 변환하여 전달 |
 
 ---
 
 ### Pack Ego Pose
-- 차량 Pose를 Bus 신호(`BusVehiclePose`, `BusActorPose`)로 변환  
-- RoadRunner `Ego Pose Writer`로 **실시간 전송 및 상태 반영**
+
+| 구성 요소 | 설명 |
+|------------|------|
+| **입력** | Vehicle Dynamics 블록에서 계산된 Pose (x, y, yaw 등) |
+| **BusVehiclePose → BusActorPose 변환** | Simulink Bus 구조를 이용해 RoadRunner 호환 형태로 변환 |
+| **출력** | Ego Pose 데이터 (ActorID, Position, Velocity, Yaw 포함)를 RoadRunner Ego Pose Writer로 전송 |
 
 ---
 
-## 실행 방법
+
+## 3) 실행 방법
 
 1. `Third_Impact_final2.mlx` 파일에서 **프로젝트 경로(`rrProjectPath`)**를 환경에 맞게 수정  
 2. `Third_Impact_final2.slx`를 RoadRunner의 **Behavior 설정**에 등록  
@@ -221,7 +248,7 @@ set(rrSim, 'SimulationCommand','Start');
 
 ---
 
-## 실험 결과 및 분석
+## 4) 실험 결과 및 분석
 
 | 항목 | 측정 결과 |
 |------|------------|
@@ -251,7 +278,6 @@ set(rrSim, 'SimulationCommand','Start');
 
 ### 개선 계획
 - Adaptive Lookahead 적용 (커브 구간에서 `Ld` 자동 증가)  
-- PID 제어기 **D항 감쇠** → Overshoot 완화  
 - Reference 전환 구간에 **Smoothing Zone(보간 구간)** 추가  
 
 > *이는 단순한 제어 실패가 아니라 실제 차량의 물리적 한계를 재현한 거동으로 해석됩니다.  

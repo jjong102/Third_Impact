@@ -63,7 +63,7 @@ https://github.com/user-attachments/assets/e5bf20b4-b53e-46cf-94a6-a1721da3aa57
   - **Cut-in 대응 전략:**  
     차선 변경 후 일정 시간 동안 Lookahead Distance를 확장하여 급격한 조향 변화 억제  
   - **기타 구현 기능:**  
-    Adaptive Lookahead, Sigmoid 속도 제어, Overshoot 억제 PID 조정  
+    Adaptive Lookahead, Sigmoid 속도 제어
 
 ---
 
@@ -106,9 +106,11 @@ https://github.com/user-attachments/assets/e5bf20b4-b53e-46cf-94a6-a1721da3aa57
 | 시뮬레이션 시간 | 약 60초 내외 / 1회 |
 
 - **결과 분석:**  
-  전방 차량 감지 및 차선 변경 판단은 정상적으로 작동하였으며, 복귀 구간에서 Steering Overshoot가 한 차례 발생하였다.  
-  이는 고정된 Lookahead Distance의 한계와 Vehicle Dynamics의 반응 지연으로 분석된다.  
-  Adaptive Lookahead와 PID D항 감쇠를 적용함으로써 추후 복귀 안정성을 개선할 수 있음을 확인하였다.
+  전방 차량 감지 및 차선 변경 판단은 정상적으로 작동하였으나, 복귀 구간에서 **Steering Overshoot**가 한 차례 발생하였다.  
+  이는 **고정된 Lookahead Distance(Ld0)** 설정으로 인해 곡률 변화에 충분히 대응하지 못하고,  
+  Vehicle Dynamics의 관성 효과로 조향 응답이 지연된 결과로 분석된다.  
+  추후에는 **Adaptive Lookahead 방식**을 적용하여 곡률에 따라 조향 민감도를 조정함으로써 복귀 안정성을 향상시킬 예정이다.
+
 
 ---
 
