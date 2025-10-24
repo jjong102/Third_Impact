@@ -180,6 +180,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ### Sensors and Vehicles Subsystem
+![alt text](<images/Sensors and Vehicles Subsystem.png>)
 
 | 구성 요소 | 설명 |
 |------------|------|
@@ -192,7 +193,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ### Steering Subsystem
-
+![alt text](<images/Steering Subsystem.png>)
 | 구성 요소 | 설명 |
 |------------|------|
 | **Pure Pursuit 제어 로직** | 참조 궤적(`x_ref`, `y_ref`)을 기반으로 Lateral Error를 최소화하는 조향각 계산 |
@@ -205,7 +206,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ### Speed Subsystem
-
+![alt text](<images/Speed Subsystem.png>)
 | 구성 요소 | 역할 |
 |------------|------|
 | **Steering Angle 입력 (`steer_cmd`)** | 조향 각도에 따라 차량의 목표 속도를 동적으로 조정 |
@@ -217,6 +218,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ### Vehicle Dynamics (Bicycle Model with Force Input)
+![alt text](<images/Vehicle Dynamics.png>)
 
 | 구성 요소 | 설명 |
 |------------|------|
@@ -229,6 +231,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ### Pack Ego Pose
+![alt text](<images/Pack Ego Pose.png>)
 
 | 구성 요소 | 설명 |
 |------------|------|
