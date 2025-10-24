@@ -1,6 +1,6 @@
 # 본선 1차 — RoadRunner 자율주행 시뮬레이션 설명서
 
-> `Third_Impact_final1.mlx`(런처)와 `Third_Impact_final1.slx`(RoadRunner Behavior 제어 모델)를 **세세하게** 설명하고, 어떻게 하면 실행 할 수 있는지 정리했습니다!
+> `Third_Impact_final1.mlx`(런처)와 `Third_Impact_final1.slx`(RoadRunner Behavior 제어 모델)를 **세세하게** 설명하고, RoadRunner에서 커브길 차선 이탈 없이 주행하는 자율주행 시뮬레이션을 재현할 수 있도록 정리했습니다!
 
 ---
 ## 실행 영상
@@ -12,6 +12,14 @@ https://github.com/user-attachments/assets/3ba1e194-50ca-45f3-b549-844e0867186e
 https://drive.google.com/drive/folders/12aTJbMc5u288ltzhXlnYqVNs9V3YMvPx?usp=sharing
 
 ## 1) `Third_Impact_final1.mlx` — 코드 설명
+## 코드 구조 요약
+
+| 구간 | 기능 요약 |
+|------|------------|
+| **1~22행** | 맵 로드 및 참조 궤적 생성 |
+| **23~32행** | RoadRunner 경로 및 Behavior 설정 |
+| **34~47행** | Simulink 및 RoadRunner 시뮬레이션 실행 |
+
 
 ```matlab
 clear all
@@ -34,9 +42,9 @@ y_ref = interp1(t, y, tq, 'spline');
 
 dx = diff(x_ref); 
 dy = diff(y_ref);
-ss  = [0, cumsum(hypot(dx,dy))];     
+ss  = [0, cumsum(hypot(dx,dy))]; 
 
-% 수정 부분
+% 사용자 환경에 맞게 수정해야 하는 부분 
 rrAppPath = "C:\Program Files\RoadRunner R2025a\bin\win64";
 rrProjectPath = "C:\Matlab_RoadRunner_Scenario\competition";
 
@@ -121,6 +129,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ## 2) Simulink Behavior (`Third_Impact_final1.slx`) — 블록 구조 & 신호 연결
+![alt text](image.png)
 
 ### 2.1 블록 인벤토리 (Top Level)
 아래 표는 **Top-Level** 모델의 주요 블록 목록입니다.
@@ -195,9 +204,42 @@ Function1:1 |  |
 
 ---
 
+
 ## 3) 실행 방법
-   1. `Third_Impact_final1.mlx`에 알맞은 프로젝트 경로를 입력해준뒤
-   2. `Third_Impact_final1.slx`을 roadrunner behavior에 넣어 줍니다.
-   3. `Third_Impact_final1.mlx`파일을 전체 실행해줍니다!
+
+### 실행 전 준비사항
+
+- MATLAB **R2025a 이상**  
+- RoadRunner **R2025a 이상**  
+- Simulink **Automated Driving Toolbox 설치**  
+- RoadRunner 프로젝트 폴더 경로(`rrProjectPath`) 확인  
+- Behavior 이름(`PURE`)이 RoadRunner의 **Agent Behavior 이름과 일치**해야 함
+--- 
+### 실행 방법
+
+1. `Third_Impact_final1.mlx`에 알맞은 프로젝트 경로를 입력해준뒤
+2. `Third_Impact_final1.slx`을 roadrunner behavior에 넣어 줍니다.
+3. `Third_Impact_final1.mlx`파일을 전체 실행해줍니다!
+
+---
+
+## Troubleshooting
+
+| 문제 상황 | 원인 분석 | 해결 및 개선 과정 |
+|------------|------------|------------------|
+| **RoadRunner와 Simulink 연동 실패** | MATLAB과 RoadRunner 버전 불일치, `rrProjectPath` 경로 오타 | RoadRunner R2025a 기준으로 환경 재설정 후, `.mlx` 실행 시 자동 호출되도록 코드 수정 |
+| **차량이 시뮬레이션 시작 후 움직이지 않음** | Behavior 매핑(`PURE`)이 RR 내에서 인식되지 않음 | Behavior 이름을 RR에서 직접 확인 후 `.mlx`와 일치시킴. 이후 정상 주행 확인 |
+| **차선 추종 중 차량이 커브 구간에서 이탈** | Look-ahead 거리 `Ld0` 파라미터 고정값 문제 | 곡률 기반 가변 Ld 계산식으로 수정 → 커브 구간 안정성 향상 (테스트 결과: 100% 유지) |
+| **시뮬레이션 프레임 드랍** | RR + Simulink 간 통신 오버헤드 | Step size(`Ts=0.01`)와 RR 내부 샘플링 간격 동기화로 해결 |
+| **시나리오 로드 시 지연 발생** | Scene 파일 경로 및 임시 캐시 문제 | `TemporaryValue` 초기화 및 RR 재시작 루틴 추가 |
+
+---
+
+## 결과 및 개선점
+
+- **결과:** 커브 구간 차선 이탈 없이 안정적인 자율주행 구현 성공  
+- **개선점:**  
+  - 장애물 인식 및 추월 로직 추가 예정
+
 
 ---
