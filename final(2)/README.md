@@ -1,13 +1,14 @@
 # 본선 2차 — RoadRunner 자율주행 시뮬레이션 (final2)
 
-> `Third_Impact_final2.mlx`(런처)와 `Third_Impact_final2.slx`(RoadRunner Behavior 제어 모델)를 **세세하게** 설명하고, 어떻게 하면 실행 할 수 있는지 정리했습니다!
+> `Third_Impact_final2.mlx`(런처)와 `Third_Impact_final2.slx`(RoadRunner Behavior 제어 모델)를 **세세하게** 설명하고,  **차선이탈 방지 + 전방 차량 인식 + 자동 차선 변경**이 통합된 자율주행 시뮬레이션을 재현할 수 있도록 정리했습니다!
 
 ---
 ## 실행 영상
 https://github.com/user-attachments/assets/e5bf20b4-b53e-46cf-94a6-a1721da3aa57
 
 ## 구현 사항
-**RoadRunner에서 차선이탈 방지 자율주행 + 앞에 자동차 있을 경우 차선 변경 구현**
+**RoadRunner 상에서 차선이탈 없이 주행하면서, 전방 차량을 감지할 경우 안전하게 차선을 변경하도록 구현**
+
 
 ## 구글 드라이브 파일 링크
 https://drive.google.com/drive/folders/1MZrk5KygLa-TrtS4h8m7FX8dpd-CAfQZ?usp=sharing
