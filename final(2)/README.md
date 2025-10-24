@@ -139,7 +139,7 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ## 2️⃣ Simulink Behavior (`Third_Impact_final2.slx`) — Top-Level 구조
-![alt text](image.png)
+![alt text](images/main.png)
 ---
 
 ### 2.1 블록 인벤토리

@@ -169,7 +169,6 @@ set(rrSim, 'SimulationCommand','Start');
 ---
 
 ### Sensors and Vehicles
-![alt text](./images/Sensorsandvehicles.png)
 
 
 | 구성 요소 | 설명 |
