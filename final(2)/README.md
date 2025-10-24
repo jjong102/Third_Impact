@@ -205,8 +205,6 @@ set(rrSim, 'SimulationCommand','Start');
 
 ---
 
----
-
 ### Speed Subsystem
 ![alt text](<images/Speed Subsystem.png>)
 | 구성 요소 | 역할 |
