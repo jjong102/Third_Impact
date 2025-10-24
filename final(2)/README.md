@@ -200,7 +200,7 @@ set(rrSim, 'SimulationCommand','Start');
 | **Adaptive Lookahead (Ld)** | 차량 속도 및 곡률에 따라 동적으로 Lookahead 거리 조정 |
 | **Yaw Rate 제한부** | 급격한 조향 시 발생하는 과도 yaw rate를 감쇠하여 안정성 확보 |
 | **steer_cmd 출력** | 계산된 조향각 명령을 Vehicle Dynamics에 전달 |
-
+**genTarget.m, getDelta.m 함수 참조**
 ---
 
 ---
