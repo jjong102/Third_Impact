@@ -9,6 +9,7 @@
   - 이원종 (3학년 / 학부) — leewon102@inu.ac.kr  
   - 이석빈 (4학년 / 학부) — lsbin11@inu.ac.kr  
   - 박소윤 (4학년 / 학부) — asz1218@inu.ac.kr  
+![2025경진대회금상](https://github.com/user-attachments/assets/2eb78d16-8894-4614-ba32-87dc05c90801)
 
 ---
 
